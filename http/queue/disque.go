@@ -72,9 +72,6 @@ type DisqueImpl struct {
 	// 前缀
 	prefix string
 
-	// 检查所有服务已经完成启动
-	_start sync.WaitGroup
-
 	// 是否开启debug
 	debug bool
 }
@@ -96,10 +93,8 @@ func (d *DisqueImpl) RUnlock() {
 }
 
 func (d *DisqueImpl) Exit() {
-	// 修改状态
-	d.Lock()
-	d.status = false
-	d.Unlock()
+	// 关闭服务。
+	d.Disable()
 
 	// 等待一回儿
 	log.Info("关闭服务")
@@ -118,19 +113,12 @@ func NewQueue() Disque {
 	d := new(DisqueImpl)
 	d.init()
 
-	d.Disable()
-
 	// 恢复数据到队列
 	d.StartRestTask()
 	// 超时检查
 	d.StartCheckTimeoutCron()
-
-	go func() {
-		// 等待其他服务完成启动
-		d._start.Wait()
-		// 标记服务正常运行
-		d.Enable()
-	}()
+	// 标记服务正常运行
+	d.Enable()
 
 	return d
 }
@@ -163,17 +151,15 @@ func (d *DisqueImpl) StartCheckTimeoutCron() {
 	}()
 
 }
+
 func (d *DisqueImpl) CheckTimeoutCron() {
-	tick := time.NewTicker(time.Second * 3)
 	for {
 		if d.Running() {
-			select {
-			case <-tick.C:
-				if d.Debug() {
-					log.Warning("check task timeout cron")
-				}
-				d.CheckTimeoutTask()
+			if d.Debug() {
+				log.Warning("check task timeout cron")
 			}
+			d.CheckTimeoutTask()
+			time.Sleep(time.Second * 3)
 		} else {
 			time.Sleep(time.Second / 5)
 		}
@@ -325,23 +311,16 @@ func (d *DisqueImpl) Running() bool {
 // 标记服务状态。标记服务正常运行
 func (d *DisqueImpl) Enable() {
 	log.Info("开启服务")
-
 	d.Lock()
 	defer d.Unlock()
-
-	if !d.status {
-		d.status = true
-	}
+	d.status = true
 }
 
 // 标记服务状态。将服务关闭
 func (d *DisqueImpl) Disable() {
 	d.Lock()
 	defer d.Unlock()
-
-	if d.status {
-		d.status = false
-	}
+	d.status = false
 }
 
 func (d *DisqueImpl) Success(id int) error {
@@ -387,13 +366,9 @@ func (d *DisqueImpl) Success(id int) error {
 
 func (d *DisqueImpl) StartRestTask() {
 
-	d._start.Add(1)
-	go func() {
-		defer d._start.Done()
-		// 等待其他服务启动完成
-		time.Sleep(time.Second * 5)
-		d.ResetTask()
-	}()
+	// 等待其他服务启动完成
+	time.Sleep(time.Second * 5)
+	d.ResetTask()
 }
 
 // 启动服务。从hset同步到tasks
@@ -451,6 +426,7 @@ func (d *DisqueImpl) Rejoin(id int) error {
 
 	return nil
 }
+
 func (d *DisqueImpl) _Rejoin(id int) error {
 
 	if d.Debug() {
@@ -465,8 +441,9 @@ func (d *DisqueImpl) _Rejoin(id int) error {
 		return nil
 	}
 	delete(d.doing, id)
-	// 写入队列中, (class+100)规避垃圾数据。死循环
-	task.Class += 100
+
+	// 写入队列中, (class+1000000)规避垃圾数据。死循环
+	task.Class += 1000000
 	d.list.Push(task.Class, task)
 
 	return nil
