@@ -227,7 +227,7 @@ func (d *DisqueImpl) Add(class, id int) error {
 	d.tasks[id] = task
 
 	// 写入队列中
-	d.list.Push(class, id)
+	d.list.Push(class, task)
 
 	// 写入数据库中
 	GetSync().AddSync(func() error {
@@ -466,7 +466,8 @@ func (d *DisqueImpl) _Rejoin(id int) error {
 	}
 	delete(d.doing, id)
 	// 写入队列中, (class+100)规避垃圾数据。死循环
-	d.list.Push(task.Class+100, task)
+	task.Class += 100
+	d.list.Push(task.Class, task)
 
 	return nil
 }
