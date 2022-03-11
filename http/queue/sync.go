@@ -1,7 +1,6 @@
 package queue
 
 import (
-	"gitee.com/zhucheer/orange/logger"
 	"sync"
 	"time"
 )
@@ -53,7 +52,7 @@ func (s *SyncImpl) AddSync(f func() error) {
 		for {
 			err := f()
 			if err != nil {
-				logger.Error("sync errmsg: %+v", err)
+				log.Error("sync errmsg: %+v", err)
 				time.Sleep(time.Second / 2)
 			} else {
 				return nil

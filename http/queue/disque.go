@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"gitee.com/zhucheer/orange/cfg"
-	"gitee.com/zhucheer/orange/logger"
 	"github.com/gomodule/redigo/redis"
 	"os"
 	"strconv"
@@ -103,15 +102,15 @@ func (d *DisqueImpl) Exit() {
 	d.Unlock()
 
 	// 等待一回儿
-	logger.Info("关闭服务")
-	logger.Info("先休眠一回儿")
+	log.Info("关闭服务")
+	log.Info("先休眠一回儿")
 	time.Sleep(time.Second * 10)
 
-	logger.Info("等待同步完成")
+	log.Info("等待同步完成")
 	GetSync().WaitSync()
 
 	// 检查同步是否完成
-	logger.Info("等待sync全部完成")
+	log.Info("等待sync全部完成")
 }
 
 // 创建一个队列
@@ -157,7 +156,7 @@ func (d *DisqueImpl) Debug() bool {
 
 func (d *DisqueImpl) StartCheckTimeoutCron() {
 	if d.Debug() {
-		logger.Info("启动检查超时task")
+		log.Info("启动检查超时task")
 	}
 	go func() {
 		d.CheckTimeoutCron()
@@ -171,7 +170,7 @@ func (d *DisqueImpl) CheckTimeoutCron() {
 			select {
 			case <-tick.C:
 				if d.Debug() {
-					logger.Warning("check task timeout cron")
+					log.Warning("check task timeout cron")
 				}
 				d.CheckTimeoutTask()
 			}
@@ -216,7 +215,7 @@ func (d *DisqueImpl) Add(class, id int) error {
 	// 写入存储中
 	if _, ok := d.tasks[id]; ok {
 		if d.Debug() {
-			logger.Warning("add a old task, id: %d", id)
+			log.Warning("add a old task, id: %d", id)
 		}
 		return nil
 	}
@@ -233,7 +232,7 @@ func (d *DisqueImpl) Add(class, id int) error {
 	// 写入数据库中
 	GetSync().AddSync(func() error {
 		if d.Debug() {
-			logger.Warning("add a new task, id: %d,time:%s", id, task.JoinTime.String())
+			log.Warning("add a new task, id: %d,time:%s", id, task.JoinTime.String())
 		}
 		err := Redis(func(runner redis.Conn) error {
 			rwMux.RLock()
@@ -272,7 +271,7 @@ func (d *DisqueImpl) Eject() (int, error) {
 	e, ok := d.list.Pop()
 	if !ok {
 		if d.Debug() {
-			logger.Warning("eject a task, list is null")
+			log.Warning("eject a task, list is null")
 		}
 		return 0, nil
 	}
@@ -325,7 +324,7 @@ func (d *DisqueImpl) Running() bool {
 
 // 标记服务状态。标记服务正常运行
 func (d *DisqueImpl) Enable() {
-	logger.Info("开启服务")
+	log.Info("开启服务")
 
 	d.Lock()
 	defer d.Unlock()
@@ -370,7 +369,7 @@ func (d *DisqueImpl) Success(id int) error {
 	// 同步到数据库中
 	GetSync().AddSync(func() error {
 		if d.Debug() {
-			logger.Warning("complete a task, id: %d,time:%s", id, task.JoinTime.String())
+			log.Warning("complete a task, id: %d,time:%s", id, task.JoinTime.String())
 		}
 		err := Redis(func(runner redis.Conn) error {
 			rwMux.RLock()
@@ -402,8 +401,8 @@ func (d *DisqueImpl) ResetTask() {
 
 	// 从hset 读取写入tasks
 	// 将未完成的tasks写入list
-	logger.Info("从hset恢复数据到队列中")
-	defer logger.Info("从hset恢复数据到队列中完成")
+	log.Info("从hset恢复数据到队列中")
+	defer log.Info("从hset恢复数据到队列中完成")
 	// lock
 	d.Lock()
 	defer d.Unlock()
@@ -426,7 +425,7 @@ func (d *DisqueImpl) ResetTask() {
 			json.Unmarshal([]byte(body), task)
 			d.tasks[task.Id] = task
 			if !task.Success {
-				logger.Info("恢复数据 hset -> task, id: %d", task.Id)
+				log.Info("恢复数据 hset -> task, id: %d", task.Id)
 				d.list.Push(task.Class, task)
 			}
 		}
@@ -455,7 +454,7 @@ func (d *DisqueImpl) Rejoin(id int) error {
 func (d *DisqueImpl) _Rejoin(id int) error {
 
 	if d.Debug() {
-		logger.Warning("rejoin a task, id: %d", id)
+		log.Warning("rejoin a task, id: %d", id)
 	}
 	// doing 移除
 	// 写入list
