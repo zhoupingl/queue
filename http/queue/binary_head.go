@@ -49,20 +49,39 @@ func (b *BinaryHeadImpl) ShiftUp(addr int) {
 		return
 	}
 
-	if b.list[parentAddr].Class > b.list[addr].Class {
-		b.list[parentAddr], b.list[addr] = b.list[addr], b.list[parentAddr]
+	if b.compareClass(parentAddr, addr) == 1 {
+		b.Swap(parentAddr, addr)
 		b.ShiftUp(parentAddr)
 	}
 
 }
 
+// 比较两个节点优先级
+// addr < addr2 return -1
+// addr = addr2 return 0
+// addr > addr2 return 1
+func (b *BinaryHeadImpl) compareClass(addr, addr2 int) int {
+	if b.list[addr].Class < b.list[addr2].Class {
+		return -1
+	} else if b.list[addr].Class == b.list[addr2].Class {
+		return 0
+	} else {
+		return 1
+	}
+}
+
+// 交互位置
+func (b *BinaryHeadImpl) Swap(addr, addr2 int) {
+	b.list[addr], b.list[addr2] = b.list[addr2], b.list[addr]
+}
+
 // 求左右节点 最小节点位置
-func (b *BinaryHeadImpl) ShiftDownAddr(addr int) int {
+func (b *BinaryHeadImpl) LeafMinAddr(addr int) int {
 	leftAddr := b.LeftAddr(addr)
 	rightAddr := b.RightAddr(addr)
 
 	if b.ValidAddr(leftAddr) && b.ValidAddr(rightAddr) { // 情况1 存在左右节点
-		if b.list[leftAddr].Class < b.list[rightAddr].Class {
+		if b.compareClass(leftAddr, rightAddr) == -1 {
 			return leftAddr
 		}
 		return rightAddr
@@ -76,13 +95,13 @@ func (b *BinaryHeadImpl) ShiftDownAddr(addr int) int {
 // 弹出一个元素时候使用
 func (b *BinaryHeadImpl) ShiftDown(addr int) {
 
-	swapAddr := b.ShiftDownAddr(addr)
+	swapAddr := b.LeafMinAddr(addr)
 	if !b.ValidAddr(swapAddr) { // 不存在交换位置
 		return
 	}
 
-	if b.list[addr].Class > b.list[swapAddr].Class {
-		b.list[addr], b.list[swapAddr] = b.list[swapAddr], b.list[addr]
+	if b.compareClass(addr, swapAddr) == 1 {
+		b.Swap(addr, swapAddr)
 		b.ShiftDown(swapAddr)
 	}
 }
