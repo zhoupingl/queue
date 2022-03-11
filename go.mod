@@ -2,7 +2,10 @@ module queue
 
 go 1.17
 
-require gitee.com/zhucheer/orange v0.5.7
+require (
+	gitee.com/zhucheer/orange v0.5.8
+	github.com/gomodule/redigo v2.0.0+incompatible
+)
 
 require (
 	gitee.com/zhucheer/cfg v0.2.0 // indirect
@@ -11,7 +14,7 @@ require (
 	github.com/Shopify/sarama v1.27.2 // indirect
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.18 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/buger/jsonparser v0.0.0-20181115193947-bf1c66bbce23 // indirect
+	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -28,7 +31,6 @@ require (
 	github.com/golang-sql/civil v0.0.0-20190719163853-cb61b32ac6fe // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.2 // indirect
 	github.com/hashicorp/go-version v1.3.0 // indirect
