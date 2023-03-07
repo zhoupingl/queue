@@ -91,5 +91,5 @@ require (
 	gorm.io/driver/postgres v1.1.1 // indirect
 	gorm.io/driver/sqlserver v1.0.9 // indirect
 	gorm.io/gorm v1.21.15 // indirect
-	mellium.im/sasl v0.2.1 // indirect
+	mellium.im/sasl v0.3.1 // indirect
 )
